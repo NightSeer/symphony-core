@@ -531,6 +531,23 @@ namespace Symphony.Core
         /// <exception cref="ValidationException">Validation failed for this Controller</exception>
         public void RunEpoch(Epoch e, EpochPersistor persistor)
         {
+            RunEpoch(e, persistor, false);
+        }
+
+        /// <summary>
+        /// The core entry point for the Controller Facade; push an Epoch in here, and when the
+        /// Epoch is finished processing, control will be returned to you. 
+        /// 
+        /// <para>In other words, this
+        /// method is blocking--the Controller cannot run more than one Epoch at a time.</para>
+        /// </summary>
+        /// 
+        /// <param name="e">Single Epoch to present</param>
+        /// <param name="persistor">EpochPersistor for saving the data. May be null to indicate epoch should not be persisted</param>
+        /// <param name="waitForTrigger">Boolean to determine whether this epoch initiates on an external trigger.</param>
+        /// <exception cref="ValidationException">Validation failed for this Controller</exception>
+        public void RunEpoch(Epoch e, EpochPersistor persistor, bool waitForTrigger)
+        {
             var cts = new CancellationTokenSource();
             var cancellationToken = cts.Token;
 
@@ -611,7 +628,7 @@ namespace Symphony.Core
                 e.StartTime = Maybe<DateTimeOffset>.Some(this.Clock.Now);
 
                 log.DebugFormat("Starting epoch: {0}", CurrentEpoch.ProtocolID);
-                DAQController.Start(false);
+                DAQController.Start(waitForTrigger);
             }
             finally
             {
